@@ -38,12 +38,12 @@
                 width: 100%;
                 height: 100%;
                 /* Blur wiill be changed programmatically */
-                filter: blur(20px);
+                filter: blur(40px);
             }
 
             .menu {
                 position: absolute;
-                bottom: -20mm;
+                bottom: -30mm;
                 width: var(--pcrm-stim-width);
                 height: var(--pcrm-menu-height);
                 display: flex;
@@ -55,26 +55,74 @@
                 font-family: inherit;
                 font-size: inherit;
             }   
+
+            .button-download {
+                position: absolute;
+                bottom: 1px;
+                right:1px;
+                font-size: 3mm;
+            }
         </style>
         <script>
             var img_stim;
             var menus = {};
+
+            var query = new URLSearchParams(window.location.search);
+
+            var maxBlur = 60; // px
+            var stepBlur = 4; 
+            var idx_stim  = query.get('item') || 0;
+            var idx_level = 0;
+
             var datalog  = {
+                "version": "0.0.0",
                 "date": (new Date()).toISOString(),
-                "version": "0.0.1",
+                "userAgent": navigator.userAgent,
+                "displayProperties": {
+                    "devicePixelRatio": window.devicePixelRatio,
+                    "width": window.screen.width,
+                    "height": window.screen.height,
+                    "colorDepth": window.screen.colorDepth,
+                    "orientation": window.screen.orientation.type,
+                    "innerWidth": window.innerWidth,
+                    "innerHeight": window.innerHeight
+                },
+                "experiment": {
+                    "task": "pcrm/things/images_THINGSplus-CC0/gt75sdlt25-num",
+                    "maxBlur": maxBlur,
+                    "stepBlur": stepBlur,
+                },
                 "events": []
             };
 
             function stim_advance() {
-                
+                if (idx_level > 15) {
+                    stim_next();
+                    return;
+                }
+                // Calculate the radius for the Gaussian blur.
+                sd = maxBlur - idx_level * stepBlur;
+                filter = `blur(${sd}px)`;
 
+                log('advance:' + filter);
+
+                img_stim.style.filter = filter;
+                idx_level++;
             };
 
             function stim_next() {
+                idx_stim++;
+                idx_level=0;
+                file = `/things/images_THINGSplus-CC0/gt75sdlt25-num/${String(idx_stim).padStart(3,0)}.jpg`;
+                log(`image:${idx_stim}`)
                 menu_show('sel')
+                img_stim.src=file;
+                stim_advance();
+
             };
 
             function stim_check() {
+                log('check');
                 menu_show('chk');
                 img_stim.style.filter='blur(0)';
             };
@@ -91,6 +139,22 @@
             function log(event) {
                 const timestamp = (new Date()).toISOString();
                 datalog["events"].push({"time": timestamp, "event": event});
+            };
+
+            function download() {
+                const blob = new Blob([JSON.stringify(datalog)], {
+                type: "application/json",
+                });
+               
+                const node = document.createElement('a');
+                node.href =  URL.createObjectURL(blob);
+                node.download = `PCRMNorm_${datalog.date.replaceAll(':', '').substring(0,17)}.json`;
+                node.display = 'none';
+                document.body.appendChild(node);
+                node.click();
+                URL.revokeObjectURL(node.href);
+                node.remove();
+                
             };
 
             addEventListener("DOMContentLoaded", function (ev) {
@@ -112,18 +176,18 @@
         <div class="presentation">
             
             <!-- The stimulus image -->
-            <img id="stim" class="stim" src="/things/images_THINGSplus-CC0/gt75sdlt25-num/012.jpg">
+            <img id="stim" class="stim">
             
             <!-- Select the object -->
             <div id="menu-select" class="menu">
-                <button>I know it!</button>
-                <button>Not sure</button>
+                <button onclick="stim_check()">I know it!</button>
+                <button onclick="stim_advance()">Not sure</button>
             </div>
 
             <!-- Determine if guess was correct (clarified) -->
             <div id="menu-check" class="menu">
-                Were you correct? <button>Yes</button>
-                <button>No</button>
+                Were you correct? <button onclick="log('correct');stim_next();"></buttononclick>Yes</button>
+                <button onclick="log('incorrect');stim_next();">No</button>
             </div>
             
             <!-- Name the object -->
@@ -133,5 +197,6 @@
                 <button>Submit</button>
             </div>
         </div>
+        <button class="button-download" onclick="download()">Download Data</button>
     </body>
 </html>
