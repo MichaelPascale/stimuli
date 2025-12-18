@@ -128,7 +128,6 @@
                 file = `/things/images_THINGSplus-CC0/gt75sdlt25-num/${String(idx_stim).padStart(3,0)}.jpg`;
                 dev_readout.innerText = idx_stim;
                 log(`image:${idx_stim}`)
-                removeEventListener("keydown", listener_keydown);
                 
                 // Hide the menu while the image is loading.
                 menu_show(null);
@@ -158,8 +157,6 @@
                     display_toggle(img_stim);
                     display_toggle(message_readout);
 
-                    addEventListener("keydown", listener_keydown);
-
                     stim_advance();
 
                 }, 1250);
@@ -173,7 +170,6 @@
 
             function stim_check() {
                 log('check');
-                removeEventListener("keydown", listener_keydown);
                 menu_show('chk');
                 img_stim.style.filter='blur(0)';
             };
@@ -220,14 +216,6 @@
                 
             };
 
-            function listener_keydown(ev) {
-                log(`keydown:${ev.key}`);
-                if (ev.key == 'k')
-                    stim_advance()
-                else if (ev.key == 's')
-                    stim_check()
-            }
-
             addEventListener("DOMContentLoaded", function (ev) {
 
                 img_stim     = document.getElementById("stim");
@@ -260,8 +248,8 @@
             
             <!-- Select the object -->
             <div id="menu-select" class="menu">
-                <button onclick="stim_check()">I know it! (s)</button>
-                <button onclick="stim_advance()">Not sure (k)</button>
+                <button onclick="stim_check()">I know it!</button>
+                <button onclick="stim_advance()">Not sure</button>
             </div>
 
             <!-- Determine if guess was correct (clarified) -->
