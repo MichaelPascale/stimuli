@@ -60,6 +60,16 @@
                 align-items: center;
                 justify-content: space-evenly;
             }
+
+            .points-display {
+                position: absolute;
+                top: -30mm;
+                width: var(--pcrm-stim-width);
+                height: var(--pcrm-menu-height);
+                display: flex;
+                align-items: center;
+                justify-content: space-evenly;
+            }
             
             button {
                 font-family: inherit;
@@ -77,6 +87,9 @@
             var img_stim;
             var menus = {};
             var dev_readout;
+            var dev_points_readout;
+            var points_menu;
+            var points_possible_readout;
             var message_readout;
 
             var query = new URLSearchParams(window.location.search);
@@ -85,6 +98,9 @@
             var stepBlur = 4; 
             var idx_stim  = query.get('item') || 0;
             var idx_level = 0;
+
+            var points = 0;
+            var points_earnable = 0;
 
             var datalog  = {
                 "version": "0.0.1",
@@ -119,6 +135,13 @@
                 log('advance:' + filter);
                 
                 img_stim.style.filter = filter;
+
+                points_earnable = 500*15 - 500*idx_level;
+
+                // Specifying the points text color in the perceptually uniform CIE L*a*b* colorspace.
+                points_possible_readout.style.color = `lab(${80-40*idx_level/15}% -120 125)`;
+                points_possible_readout.innerText = points_earnable;
+
                 idx_level++;
             };
 
@@ -133,7 +156,11 @@
                 // Hide the menu while the image is loading.
                 menu_show(null);
                 display_toggle(img_stim);
+                display_toggle(points_menu);
+
+                // Show the points screen.
                 display_toggle(message_readout);
+                message_readout.innerText = `${points} points`;
 
                 if (img_stim.src) {
                     const prev = img_stim.src;
@@ -156,6 +183,7 @@
 
                     menu_show('sel')
                     display_toggle(img_stim);
+                    display_toggle(points_menu);
                     display_toggle(message_readout);
 
                     addEventListener("keydown", listener_keydown);
@@ -236,10 +264,14 @@
                 menus['chk'] = document.getElementById("menu-check");
                 menus['nam'] = document.getElementById("menu-name")
 
+                points_menu = document.getElementById("points-display")
+                points_possible_readout = document.getElementById("points-possible");
                 message_readout = document.getElementById("message");
                 display_toggle(message_readout);
 
                 dev_readout  = document.getElementById("developer-image-idx");
+                dev_points_readout = document.getElementById("developer-points");
+                dev_points_readout.innerText = points;
                 
 
                 Object.values(menus).forEach(el => el.style.display = 'none');
@@ -253,6 +285,7 @@
     <body>
            <div class="presentation">
 
+            <div id="points-display" class="points-display">A correct guess now will earn <span id="points-possible" style="width: 20mm; text-align: center; font-weight: bold;">1500</span> points.</div>
             
             <!-- The stimulus image -->
             <img id="stim" class="stim">
@@ -266,7 +299,7 @@
 
             <!-- Determine if guess was correct (clarified) -->
             <div id="menu-check" class="menu">
-                Were you correct? <button onclick="log('correct');stim_next();"></buttononclick>Yes</button>
+                Were you correct? <button onclick="log('correct'); points += points_earnable; dev_points_readout.innerText = points;  stim_next();"></buttononclick>Yes</button>
                 <button onclick="log('incorrect');stim_next();">No</button>
             </div>
             
@@ -278,6 +311,7 @@
             </div>
         </div>
         <div class="developer-controls">
+            Points <span id="developer-points"></span>,
             Image <span id="developer-image-idx"></span>
             <button onclick="download()">Download Data</button>
         </div>
