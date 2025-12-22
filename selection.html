@@ -130,8 +130,6 @@
                 log(`image:${idx_stim}`)
                 removeEventListener("keydown", listener_keydown);
                 
-                // Hide the menu while the image is loading.
-                menu_show(null);
                 display_toggle(img_stim);
                 display_toggle(message_readout);
 
@@ -144,6 +142,8 @@
 
                 const res_promise = fetch(file);
 
+                setTimeout(async () => {menus['sel'].innerText = "";}, 1000);
+
                 setTimeout(async ()=>{
                     const res = await res_promise;
                     
@@ -154,7 +154,6 @@
 
                     img_stim.src=objectURL;
 
-                    menu_show('sel')
                     display_toggle(img_stim);
                     display_toggle(message_readout);
 
@@ -221,11 +220,31 @@
             };
 
             function listener_keydown(ev) {
-                log(`keydown:${ev.key}`);
-                if (ev.key == 'k')
-                    stim_advance()
-                else if (ev.key == 's')
-                    stim_check()
+                log(`key:${ev.key}`);
+                
+                switch (ev.key) {
+                    case 'f':
+                        menus['sel'].innerText = "no guess";
+                        stim_advance();
+                        break;
+                    case 'g':
+                        menus['sel'].innerText = "low confidence guess";
+                        stim_advance();
+                        break;
+                    case 'h':
+                        menus['sel'].innerText = "high confidence guess";
+                        stim_advance();
+                        break;
+                    case 'c':
+                        menus['sel'].innerText = "abandoned guess";
+                        break;
+                    case 'e':
+                        menus['sel'].innerText = "marked for review";
+                        stim_next();
+                        break;
+                    default:
+                        console.log(`Invalid key: '${ev.key}'.`)
+                }
             }
 
             addEventListener("DOMContentLoaded", function (ev) {
@@ -243,9 +262,8 @@
                 
 
                 Object.values(menus).forEach(el => el.style.display = 'none');
+                menu_show('sel');
                 
-                alert("As soon as you feel that you can identify the object in the image, even if not by name, click \"I know it!\". Then, the clarified image will be shown. Determine whether you were correct.\n\nWhen you are complete, note the image number and click the Download Data button.\n\nYou can return to where you left off by appending \"?item=\" and the image number to the URL.");
-
                 stim_next();
             });
         </script>
@@ -260,8 +278,6 @@
             
             <!-- Select the object -->
             <div id="menu-select" class="menu">
-                <button onclick="stim_check()">I know it! (s)</button>
-                <button onclick="stim_advance()">Not sure (k)</button>
             </div>
 
             <!-- Determine if guess was correct (clarified) -->
