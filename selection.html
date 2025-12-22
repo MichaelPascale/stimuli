@@ -164,18 +164,6 @@
                 }, 1250);
             };
 
-            async function fetch_stim(num) {
-
-                
-
-            };
-
-            function stim_check() {
-                log('check');
-                removeEventListener("keydown", listener_keydown);
-                menu_show('chk');
-                img_stim.style.filter='blur(0)';
-            };
 
             function menu_show(menu) {
                 Object.entries(menus).forEach(([name, el]) => {
