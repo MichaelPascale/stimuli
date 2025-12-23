@@ -100,6 +100,7 @@
                     "innerHeight": window.innerHeight
                 },
                 "experiment": {
+                    "task": "pcrm/things/images_THINGSplus-CC0/gt20lt60sdlt75-20251223",
                     "levels": levels
                 },
                 "events": []
@@ -123,7 +124,7 @@
             async function stim_next() {
                 idx_stim++;
                 idx_level=0;
-                file = `/things/images_THINGSplus-CC0/gt75sdlt25-num/${String(idx_stim).padStart(3,0)}.jpg`;
+                file = `/things/images_THINGSplus-CC0/gt20lt60sdlt75-20251223/${String(idx_stim).padStart(3,0)}.jpg`;
                 dev_readout.innerText = idx_stim;
                 log(`image:${idx_stim}`)
                 removeEventListener("keydown", listener_keydown);
