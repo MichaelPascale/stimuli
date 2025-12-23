@@ -81,8 +81,8 @@
 
             var query = new URLSearchParams(window.location.search);
 
-            var maxBlur = 60; // px
-            var stepBlur = 4; 
+            // Define blur levels as 20 even steps on a logarithmic scale from 50 to 1.
+            var levels = [50.000, 40.696, 33.123, 26.959, 21.943, 17.860, 14.536, 11.831,  9.630,  7.838,  6.379,  5.192,  4.226,  3.440, 2.800,  2.279,  1.855, 1.510, 1.229,  1.000, 0];
             var idx_stim  = query.get('item') || 0;
             var idx_level = 0;
 
@@ -100,20 +100,18 @@
                     "innerHeight": window.innerHeight
                 },
                 "experiment": {
-                    "task": "pcrm/things/images_THINGSplus-CC0/gt75sdlt25-num",
-                    "maxBlur": maxBlur,
-                    "stepBlur": stepBlur,
+                    "levels": levels
                 },
                 "events": []
             };
 
             function stim_advance() {
-                if (idx_level > 15) {
+                if (idx_level > 20) {
                     stim_next();
                     return;
                 }
                 // Calculate the radius for the Gaussian blur.
-                sd = maxBlur - idx_level * stepBlur;
+                sd = levels[idx_level];
                 filter = `blur(${sd}px)`;
 
                 log('advance:' + filter);
