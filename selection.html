@@ -116,6 +116,7 @@
                 filter = `blur(${sd}px)`;
 
                 log('advance:' + filter);
+                time_appeared = new Date();
                 
                 img_stim.style.filter = filter;
                 idx_level++;
@@ -207,6 +208,15 @@
             };
 
             function listener_keydown(ev) {
+                
+
+                if (((new Date()) - time_appeared) < 500) {
+                    menus['sel'].innerText = "too fast";
+                    log(`fastkey:${ev.key}`);
+                    time_appeared = new Date();
+                    return;
+                }
+                
                 log(`key:${ev.key}`);
                 
                 switch (ev.key) {
