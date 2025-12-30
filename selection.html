@@ -276,6 +276,17 @@
                 }
             }
 
+            function listener_begin(ev) {
+                if (ev.key != 'f')
+                    return;
+
+                log('begin');
+                removeEventListener('keydown', listener_begin);
+                message_readout.innerText = '';
+                display_toggle(message_readout);
+                stim_next();
+            };
+
             addEventListener("DOMContentLoaded", function (ev) {
 
                 stimuli = stim_order(n_trials, Number(query.get('item') || 1));
@@ -287,15 +298,15 @@
                 menus['nam'] = document.getElementById("menu-name")
 
                 message_readout = document.getElementById("message");
-                display_toggle(message_readout);
+                message_readout.innerHTML= "<p>Read the task instructions, then place your hand over the f/g/h keys.</p><p>Press <u>f</u> to begin with the first image.</p>"
 
                 dev_readout  = document.getElementById("developer-image-idx");
                 
 
                 Object.values(menus).forEach(el => el.style.display = 'none');
                 menu_show('sel');
-                
-                stim_next();
+
+                addEventListener('keydown', listener_begin);
             });
         </script>
     </head>
