@@ -238,6 +238,8 @@
 
                 if ((((new Date()) - time_appeared) < 500) && ev.key == lastKey) {
                     menus['sel'].innerText = "too fast";
+                    menus['sel'].style.color = 'red';
+                    menus['sel'].style.fontWeight = 'bold';
                     log(`fastkey:${ev.key}`);
                     time_appeared = new Date();
                     return;
@@ -245,6 +247,9 @@
                 
                 log(`key:${ev.key}`);
                 lastKey = ev.key;
+
+                menus['sel'].style.color = 'unset';
+                menus['sel'].style.fontWeight = 'unset';
                 
                 switch (ev.key) {
                     case 'f':
