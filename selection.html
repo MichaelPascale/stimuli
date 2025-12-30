@@ -87,6 +87,7 @@
             var idx_level = 0;
 
             var time_appeared;
+            var lastKey;
 
             var datalog  = {
                 "version": "0.1.0",
@@ -212,7 +213,7 @@
             function listener_keydown(ev) {
                 
 
-                if (((new Date()) - time_appeared) < 500) {
+                if ((((new Date()) - time_appeared) < 500) && ev.key == lastKey) {
                     menus['sel'].innerText = "too fast";
                     log(`fastkey:${ev.key}`);
                     time_appeared = new Date();
@@ -220,6 +221,7 @@
                 }
                 
                 log(`key:${ev.key}`);
+                lastKey = ev.key;
                 
                 switch (ev.key) {
                     case 'f':
