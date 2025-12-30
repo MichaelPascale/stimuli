@@ -81,13 +81,18 @@
 
             var query = new URLSearchParams(window.location.search);
 
-            var maxBlur = 60; // px
-            var stepBlur = 4; 
-            var idx_stim  = query.get('item') || 0;
+            // Define blur levels as 20 even steps on a logarithmic scale from 50 to 1.
+            var levels = [50.000, 40.696, 33.123, 26.959, 21.943, 17.860, 14.536, 11.831,  9.630,  7.838,  6.379,  5.192,  4.226,  3.440, 2.800,  2.279,  1.855, 1.510, 1.229,  1.000, 0];
+            var stimuli;
+            var n_trials = 524;
+            var idx_stim = -1;
             var idx_level = 0;
 
+            var time_appeared;
+            var lastKey;
+
             var datalog  = {
-                "version": "0.0.2",
+                "version": "0.1.2",
                 "date": (new Date()).toISOString(),
                 "userAgent": navigator.userAgent,
                 "displayProperties": {
@@ -100,23 +105,32 @@
                     "innerHeight": window.innerHeight
                 },
                 "experiment": {
-                    "task": "pcrm/things/images_THINGSplus-CC0/gt75sdlt25-num",
-                    "maxBlur": maxBlur,
-                    "stepBlur": stepBlur,
+                    "task": "pcrm/things/images_THINGSplus-CC0/gt20lt60sdlt75-20251223",
+                    "levels": levels
                 },
                 "events": []
             };
 
+            function stim_order(cap, start=1) {
+                const order = new Array(cap);
+
+                for (var i = 0; i < cap; i++) 
+                    order[i] = ((start - 1 + i) % (cap)) + 1;
+
+                return order;
+            };
+
             function stim_advance() {
-                if (idx_level > 15) {
+                if (idx_level > 20) {
                     stim_next();
                     return;
                 }
                 // Calculate the radius for the Gaussian blur.
-                sd = maxBlur - idx_level * stepBlur;
+                sd = levels[idx_level];
                 filter = `blur(${sd}px)`;
 
                 log('advance:' + filter);
+                time_appeared = new Date();
                 
                 img_stim.style.filter = filter;
                 idx_level++;
@@ -125,12 +139,23 @@
             async function stim_next() {
                 idx_stim++;
                 idx_level=0;
-                file = `/things/images_THINGSplus-CC0/gt75sdlt25-num/${String(idx_stim).padStart(3,0)}.jpg`;
-                dev_readout.innerText = idx_stim;
-                log(`image:${idx_stim}`)
+                if (idx_stim >= n_trials) {
+                    removeEventListener("keydown", listener_keydown);
+                    log("end");
+                    display_toggle(img_stim);
+                    display_toggle(message_readout);
+                    message_readout.innerText = "End. Thank you for participating.";
+                    menus['sel'].innerText = '';
+                    return;
+                }
+
+
+
+                file = `/things/images_THINGSplus-CC0/gt20lt60sdlt75-20251223/${String(stimuli[idx_stim]).padStart(3,0)}.jpg`;
+                dev_readout.innerText = stimuli[idx_stim];
+                log(`image:${stimuli[idx_stim]}`)
+                removeEventListener("keydown", listener_keydown);
                 
-                // Hide the menu while the image is loading.
-                menu_show(null);
                 display_toggle(img_stim);
                 display_toggle(message_readout);
 
@@ -141,7 +166,9 @@
                 }
 
 
-                const res_promise = await fetch(file);
+                const res_promise = fetch(file);
+
+                setTimeout(async () => {menus['sel'].innerText = "";}, 1000);
 
                 setTimeout(async ()=>{
                     const res = await res_promise;
@@ -153,26 +180,16 @@
 
                     img_stim.src=objectURL;
 
-                    menu_show('sel')
                     display_toggle(img_stim);
                     display_toggle(message_readout);
+
+                    addEventListener("keydown", listener_keydown);
 
                     stim_advance();
 
                 }, 1250);
             };
 
-            async function fetch_stim(num) {
-
-                
-
-            };
-
-            function stim_check() {
-                log('check');
-                menu_show('chk');
-                img_stim.style.filter='blur(0)';
-            };
 
             function menu_show(menu) {
                 Object.entries(menus).forEach(([name, el]) => {
@@ -216,7 +233,63 @@
                 
             };
 
+            function listener_keydown(ev) {
+                
+
+                if ((((new Date()) - time_appeared) < 500) && ev.key == lastKey) {
+                    menus['sel'].innerText = "too fast";
+                    menus['sel'].style.color = 'red';
+                    menus['sel'].style.fontWeight = 'bold';
+                    log(`fastkey:${ev.key}`);
+                    time_appeared = new Date();
+                    return;
+                }
+                
+                log(`key:${ev.key}`);
+                lastKey = ev.key;
+
+                menus['sel'].style.color = 'unset';
+                menus['sel'].style.fontWeight = 'unset';
+                
+                switch (ev.key) {
+                    case 'f':
+                        menus['sel'].innerText = "no guess";
+                        stim_advance();
+                        break;
+                    case 'g':
+                        menus['sel'].innerText = "low confidence guess";
+                        stim_advance();
+                        break;
+                    case 'h':
+                        menus['sel'].innerText = "high confidence guess";
+                        stim_advance();
+                        break;
+                    case 'c':
+                        menus['sel'].innerText = "abandoned guess";
+                        break;
+                    case 'e':
+                        menus['sel'].innerText = "marked for review";
+                        stim_next();
+                        break;
+                    default:
+                        console.log(`Invalid key: '${ev.key}'.`)
+                }
+            }
+
+            function listener_begin(ev) {
+                if (ev.key != 'f')
+                    return;
+
+                log('begin');
+                removeEventListener('keydown', listener_begin);
+                message_readout.innerText = '';
+                display_toggle(message_readout);
+                stim_next();
+            };
+
             addEventListener("DOMContentLoaded", function (ev) {
+
+                stimuli = stim_order(n_trials, Number(query.get('item') || 1));
 
                 img_stim     = document.getElementById("stim");
 
@@ -225,16 +298,15 @@
                 menus['nam'] = document.getElementById("menu-name")
 
                 message_readout = document.getElementById("message");
-                display_toggle(message_readout);
+                message_readout.innerHTML= "<p>Read the task instructions, then place your hand over the f/g/h keys.</p><p>Press <u>f</u> to begin with the first image.</p>"
 
                 dev_readout  = document.getElementById("developer-image-idx");
                 
 
                 Object.values(menus).forEach(el => el.style.display = 'none');
-                
-                alert("As soon as you feel that you can identify the object in the image, even if not by name, click \"I know it!\". Then, the clarified image will be shown. Determine whether you were correct.\n\nWhen you are complete, note the image number and click the Download Data button.\n\nYou can return to where you left off by appending \"?item=\" and the image number to the URL.");
+                menu_show('sel');
 
-                stim_next();
+                addEventListener('keydown', listener_begin);
             });
         </script>
     </head>
@@ -248,8 +320,6 @@
             
             <!-- Select the object -->
             <div id="menu-select" class="menu">
-                <button onclick="stim_check()">I know it!</button>
-                <button onclick="stim_advance()">Not sure</button>
             </div>
 
             <!-- Determine if guess was correct (clarified) -->
@@ -268,7 +338,7 @@
         <div class="developer-controls">
             Image <span id="developer-image-idx"></span>
             <button onclick="download()">Download Results</button>
-            <a href="mailto:mpascale@bu.edu?subject=pcrm_v0.0.2&body=Attach the JSON data file.">Email Your Results</a>
+            <a href="mailto:mpascale@bu.edu?subject=pcrm_v0.1.2&body=Attach the JSON data file.">Email Your Results</a>
         </div>
     </body>
 </html>
