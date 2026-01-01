@@ -76,7 +76,8 @@
         <script>
             var img_stim;
             var menus = {};
-            var dev_readout;
+            var dev_readout_img;
+            var dev_readout_idx;
             var message_readout;
 
             var query = new URLSearchParams(window.location.search);
@@ -152,7 +153,8 @@
 
 
                 file = `/things/images_THINGSplus-CC0/gt20lt60sdlt75-20251223/${String(stimuli[idx_stim]).padStart(3,0)}.jpg`;
-                dev_readout.innerText = stimuli[idx_stim];
+                dev_readout_img.innerText = stimuli[idx_stim];
+                dev_readout_idx.innerText = idx_stim;
                 log(`image:${stimuli[idx_stim]}`)
                 removeEventListener("keydown", listener_keydown);
                 
@@ -300,8 +302,8 @@
                 message_readout = document.getElementById("message");
                 message_readout.innerHTML= "<p>Read the task instructions, then place your hand over the f/g/h keys.</p><p>Press <u>f</u> to begin with the first image.</p>"
 
-                dev_readout  = document.getElementById("developer-image-idx");
-                
+                dev_readout_img  = document.getElementById("developer-image-idx");
+                dev_readout_idx  = document.getElementById("developer-rating-idx");
 
                 Object.values(menus).forEach(el => el.style.display = 'none');
                 menu_show('sel');
@@ -336,7 +338,8 @@
             </div>
         </div>
         <div class="developer-controls">
-            Image <span id="developer-image-idx"></span>
+            Rating <span id="developer-rating-idx">_</span>,
+            Image <span id="developer-image-idx">_</span>
             <button onclick="download()">Download Results</button>
             <a href="mailto:mpascale@bu.edu?subject=pcrm_v0.1.2&body=Attach the JSON data file.">Email Your Results</a>
         </div>
